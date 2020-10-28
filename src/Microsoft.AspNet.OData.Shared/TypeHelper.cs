@@ -428,7 +428,9 @@ namespace Microsoft.AspNet.OData
             foreach (Assembly assembly in assemblies)
             {
                 Type[] exportedTypes = null;
-                if (assembly == null || assembly.IsDynamic)
+                // RAPIDAPI CHANGE: WebApi excluded types from dynamic assemblies. I've removed that condition
+                // because RapidAPI models currently come from a dynamic assembly
+                if (assembly == null)
                 {
                     // can't call GetTypes on a null (or dynamic?) assembly
                     continue;
