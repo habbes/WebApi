@@ -11,6 +11,9 @@
     <RootNamespace>Microsoft.AspNet.OData</RootNamespace>
     <!-- Let's generate our own assembly info -->
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <SignAssembly>false</SignAssembly>
+    <PackageId>RapidApi.AspNetCore.OData.Experimental</PackageId>
+    <Authors>RapidApi.AspNetCore.OData.Experimental</Authors>
   </PropertyGroup>
   
   <Import Project="..\Microsoft.AspNet.OData.Shared\Microsoft.AspNet.OData.Shared.projitems" Label="Shared" />

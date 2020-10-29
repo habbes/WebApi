@@ -7,7 +7,7 @@ using System.Resources;
 using System.Runtime.InteropServices;
 
 #if NETCORE
-[assembly: AssemblyProduct("Microsoft OData Web API for ASP.NET Core")]
+[assembly: AssemblyProduct("Experimental fork of OData WebAPI for RapidAPI project")]
 #else
 [assembly: AssemblyProduct("Microsoft OData Web API for ASP.NET")]
 #endif
