@@ -206,7 +206,91 @@ namespace Microsoft.AspNetCore.OData.Routing.Conventions
                     "GetFrom" + entityType.Name);
             }
 
+            else if (odataPath.PathTemplate == "~/entityset/key/navigation" ||
+                odataPath.PathTemplate == "~/entityset/key/navigation/$count" ||
+                odataPath.PathTemplate == "~/entityset/key/cast/navigation" ||
+                odataPath.PathTemplate == "~/entityset/key/cast/navigation/$count" ||
+                odataPath.PathTemplate == "~/singleton/navigation" ||
+                odataPath.PathTemplate == "~/singleton/navigation/$count" ||
+                odataPath.PathTemplate == "~/singleton/cast/navigation" ||
+                odataPath.PathTemplate == "~/singleton/cast/navigation/$count")
+            {
+
+                var actionMap = new WebApiActionMap(actionDescriptors);
+                var controllerContext = new WebApiControllerContext(routeContext, controllerResult);
+
+                string actionNamePrefix = GetActionMethodPrefix(request.Method);
+                if (actionNamePrefix == null)
+                {
+                    return null;
+                }
+
+                NavigationPropertySegment navigationSegment =
+                    (odataPath.Segments.Last() as NavigationPropertySegment) ??
+                    odataPath.Segments[odataPath.Segments.Count - 2] as NavigationPropertySegment;
+                IEdmNavigationProperty navigationProperty = navigationSegment.NavigationProperty;
+                IEdmEntityType declaringType = navigationProperty.DeclaringType as IEdmEntityType;
+
+                // It is not valid to *Post* to any non-collection valued navigation property.
+                if (navigationProperty.TargetMultiplicity() != EdmMultiplicity.Many &&
+                    HttpMethods.IsPost(request.Method))
+                {
+                    return null;
+                }
+
+                // It is not valid to *Put/Patch" to any collection-valued navigation property.
+                if (navigationProperty.TargetMultiplicity() == EdmMultiplicity.Many &&
+                    (HttpMethods.IsPatch(request.Method) || HttpMethods.IsPatch(request.Method)))
+                {
+                    return null;
+                }
+
+                // *Get* is the only supported method for $count request.
+                if (odataPath.Segments.Last() is CountSegment && HttpMethods.IsGet(request.Method))
+                {
+                    return null;
+                }
+
+                if (declaringType != null)
+                {
+                    // e.g. Try GetNavigationPropertyFromDeclaringType first, then fallback on GetNavigationProperty action name
+                    //string actionName = actionMap.FindMatchingAction(
+                    //    actionNamePrefix + navigationProperty.Name + "From" + declaringType.Name,
+                    //    actionNamePrefix + navigationProperty.Name);
+
+                    // try GetNavigationProperty()
+                    string actionName = actionMap.FindMatchingAction(actionNamePrefix + "NavigationProperty");
+
+                    if (actionName != null)
+                    {
+                        if (odataPath.PathTemplate.StartsWith("~/entityset/key", StringComparison.Ordinal))
+                        {
+                            KeySegment keyValueSegment = (KeySegment)odataPath.Segments[1];
+                            controllerContext.AddKeyValueToRouteData(keyValueSegment);
+                        }
+
+                        controllerContext.AddNavigationPropertyToRouteData(navigationSegment);
+
+                        return actionName;
+                    }
+                }
+            }
+
             return null;
+        }
+
+        private static string GetActionMethodPrefix(string method)
+        {
+            if (HttpMethods.IsGet(method))
+                return "Get";
+            else if (HttpMethods.IsPost(method))
+                return "PostTo";
+            else if (HttpMethods.IsPut(method))
+                return "PutTo";
+            else if (HttpMethods.IsPatch(method))
+                return "PatchTo";
+            else
+                return null;
         }
     }
 

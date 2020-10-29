@@ -354,6 +354,13 @@ namespace Microsoft.AspNet.OData.Routing.Conventions
             IncrementKeyCount(controllerContext.Request.Context.RoutingConventionsStore);
         }
 
+        public static void AddNavigationPropertyToRouteData(this IWebApiControllerContext controllerContext,
+            NavigationPropertySegment navigationSegment)
+        {
+            controllerContext.RouteData.Add(ODataRouteConstants.NavigationProperty, navigationSegment.NavigationProperty.Name);
+            IncrementKeyCount(controllerContext.Request.Context.RoutingConventionsStore);
+        }
+
         /// <summary>
         /// Increments the number of keys, navigation properties and operation parameters.
         /// This count is tracked by the <see cref="ODataRouteConstants.KeyCount"/> key

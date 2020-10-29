@@ -13,6 +13,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SignAssembly>false</SignAssembly>
     <PackageId>RapidApi.AspNetCore.OData.Experimental</PackageId>
+    <PackageVersion>1.0.1</PackageVersion>
     <Authors>RapidApi.AspNetCore.OData.Experimental</Authors>
   </PropertyGroup>
   
