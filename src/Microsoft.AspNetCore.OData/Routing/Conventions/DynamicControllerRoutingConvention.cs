@@ -275,6 +275,13 @@ namespace Microsoft.AspNetCore.OData.Routing.Conventions
                     }
                 }
             }
+            else if(HttpMethods.IsGet(request.Method))
+            {
+                // TODO: This is a temporary hack for handling deeply nested paths
+                // We expect the action itself to handle the logic of extracting
+                // the path information
+                return actionDescriptors.FindMatchingAction("GetDeeplyNestedNavigationProperty");
+            }
 
             return null;
         }
