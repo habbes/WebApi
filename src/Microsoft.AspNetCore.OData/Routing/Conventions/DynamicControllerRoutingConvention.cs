@@ -106,19 +106,18 @@ namespace Microsoft.AspNetCore.OData.Routing.Conventions
             Microsoft.AspNet.OData.Routing.ODataPath odataPath = routeContext.HttpContext.ODataFeature().Path;
             HttpRequest request = routeContext.HttpContext.Request;
 
-            if (odataPath.PathTemplate == "~/entityset")
+            if (HttpMethods.IsGet(request.Method))
+            {
+                // A single Get method will handle all Get requests.
+                // It should contain the logic for traversing potenially nested path
+                // and extract the relevant keys and navigation properties
+                return actionDescriptors.FindMatchingAction("Get");
+            }
+            else if (odataPath.PathTemplate == "~/entityset")
             {
                 EntitySetSegment entitySetSegment = (EntitySetSegment)odataPath.Segments[0];
                 IEdmEntitySetBase entitySet = entitySetSegment.EntitySet;
-
-                if (HttpMethods.IsGet(request.Method))
-                {
-                    // e.g. Try GetCustomers first, then fall back to Get action name
-                    return actionDescriptors.FindMatchingAction(
-                        "Get" + entitySet.Name,
-                        "Get");
-                }
-                else if (HttpMethods.IsPost(request.Method))
+                if (HttpMethods.IsPost(request.Method))
                 {
                     // e.g. Try PostCustomer first, then fall back to Post action name
                     return actionDescriptors.FindMatchingAction(
@@ -153,15 +152,13 @@ namespace Microsoft.AspNetCore.OData.Routing.Conventions
 
                 if (actionName != null)
                 {
-                    KeySegment keySegment = (KeySegment)odataPath.Segments[1];
-                    var controllerContext = new WebApiControllerContext(routeContext, controllerResult);
-                    controllerContext.AddKeyValueToRouteData(keySegment);
                     return actionName;
                 }
             }
             else if (odataPath.PathTemplate == "~/entityset/$count" &&
                 HttpMethods.IsGet(request.Method))
             {
+                // TODO verify whether we support $count
                 EntitySetSegment entitySetSegment = (EntitySetSegment)odataPath.Segments[0];
                 IEdmEntitySetBase entitySet = entitySetSegment.EntitySet;
 
@@ -172,6 +169,7 @@ namespace Microsoft.AspNetCore.OData.Routing.Conventions
             }
             else if (odataPath.PathTemplate == "~/entityset/cast")
             {
+                // TODO: verify whether we support casts
                 EntitySetSegment entitySetSegment = (EntitySetSegment)odataPath.Segments[0];
                 IEdmEntitySetBase entitySet = entitySetSegment.EntitySet;
                 IEdmCollectionType collectionType = (IEdmCollectionType)odataPath.EdmType;
@@ -215,7 +213,8 @@ namespace Microsoft.AspNetCore.OData.Routing.Conventions
                 odataPath.PathTemplate == "~/singleton/cast/navigation" ||
                 odataPath.PathTemplate == "~/singleton/cast/navigation/$count")
             {
-
+                // TODO RapidAPI currently does not support CUD operations to nested paths,
+                // we should rewrite this code once we figure out how to add support
                 var actionMap = new WebApiActionMap(actionDescriptors);
                 var controllerContext = new WebApiControllerContext(routeContext, controllerResult);
 
@@ -263,24 +262,12 @@ namespace Microsoft.AspNetCore.OData.Routing.Conventions
 
                     if (actionName != null)
                     {
-                        if (odataPath.PathTemplate.StartsWith("~/entityset/key", StringComparison.Ordinal))
-                        {
-                            KeySegment keyValueSegment = (KeySegment)odataPath.Segments[1];
-                            controllerContext.AddKeyValueToRouteData(keyValueSegment);
-                        }
 
                         controllerContext.AddNavigationPropertyToRouteData(navigationSegment);
 
                         return actionName;
                     }
                 }
-            }
-            else if(HttpMethods.IsGet(request.Method))
-            {
-                // TODO: This is a temporary hack for handling deeply nested paths
-                // We expect the action itself to handle the logic of extracting
-                // the path information
-                return actionDescriptors.FindMatchingAction("GetDeeplyNestedNavigationProperty");
             }
 
             return null;
