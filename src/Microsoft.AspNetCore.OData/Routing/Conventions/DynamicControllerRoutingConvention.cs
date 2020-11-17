@@ -155,6 +155,36 @@ namespace Microsoft.AspNetCore.OData.Routing.Conventions
                     return actionName;
                 }
             }
+            else if (odataPath.PathTemplate == "~/entityset/key/navigation/$ref" ||
+                odataPath.PathTemplate == "~/entityset/key/cast/navigation/$ref" ||
+                odataPath.PathTemplate == "~/singleton/navigation/$ref" ||
+                odataPath.PathTemplate == "~/singleton/cast/navigation/$ref")
+            {
+                if (HttpMethods.IsDelete(request.Method))
+                {
+                    return actionDescriptors.FindMatchingAction("DeleteRef");
+                }
+                else if (HttpMethods.IsPut(request.Method))
+                {
+                    return actionDescriptors.FindMatchingAction("CreateRef");
+                }
+                else if (HttpMethods.IsPost(request.Method))
+                {
+                    return actionDescriptors.FindMatchingAction("CreateRef");
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if (HttpMethods.IsDelete(request.Method) && (
+               odataPath.PathTemplate == "~/entityset/key/navigation/key/$ref" ||
+               odataPath.PathTemplate == "~/entityset/key/cast/navigation/key/$ref" ||
+               odataPath.PathTemplate == "~/singleton/navigation/key/$ref" ||
+               odataPath.PathTemplate == "~/singleton/cast/navigation/key/$ref"))
+            {
+                return actionDescriptors.FindMatchingAction("DeleteRef");
+            }
             else if (odataPath.PathTemplate == "~/entityset/$count" &&
                 HttpMethods.IsGet(request.Method))
             {
